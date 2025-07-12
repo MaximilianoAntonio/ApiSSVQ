@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -67,13 +68,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'gestor_vehiculos.urls'
@@ -118,20 +120,17 @@ REST_FRAMEWORK = {
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'ssvq',
-        'USER': 'ssvqdb@ssvq',
-        'PASSWORD': 'ssvq1!flota',
-        'HOST': 'ssvq.database.windows.net',
-        'PORT': '1433',
+        'NAME': os.environ.get('AZURE_SQL_NAME', 'ssvq'),
+        'USER': os.environ.get('AZURE_SQL_USER', 'ssvqdb@ssvq'),
+        'PASSWORD': os.environ.get('AZURE_SQL_PASSWORD', 'ssvq1!flota'),
+        'HOST': os.environ.get('AZURE_SQL_HOST', 'ssvq.database.windows.net'),
+        'PORT': os.environ.get('AZURE_SQL_PORT', '1433'),
         'OPTIONS': {
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes',
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
         },
     }
-}
-
-# Configuración para PostgreSQL en la nube (ej. ElephantSQL)
-# Reemplaza los valores de abajo con las credenciales de tu base de datos.
+} 
 
 
 
@@ -163,13 +162,18 @@ USE_I18N = True
 USE_TZ = True 
 
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Whitenoise configuration for serving static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

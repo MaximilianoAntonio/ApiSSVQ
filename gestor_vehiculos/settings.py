@@ -27,7 +27,19 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-5e000.up.railway.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
 # CORS
+CORS_ALLOWED_ORIGINS = [
+    'https://web-production-5e000.up.railway.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 # en lugar de CORS_ALLOWED_ORIGINS = [...], usa un regex que acepte cualquier IP en el puerto 8080
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://\d+\.\d+\.\d+\.\d+:8000$",

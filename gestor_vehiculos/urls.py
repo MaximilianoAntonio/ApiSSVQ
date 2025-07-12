@@ -6,11 +6,18 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from asignaciones.views import UserGroupView
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+def health_check(request):
+    """Health check endpoint for Azure App Service"""
+    return JsonResponse({'status': 'healthy', 'service': 'gestor-vehiculos-api'})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('asignaciones.urls')),
     path('api/user-groups/', UserGroupView.as_view(), name='user-groups'),
+    path('health/', health_check, name='health-check'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # 2. Añade esta condición al final del archivo

@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: gestor-vehiculos
+metadata:
+  template: gestor-vehiculos-api@0.0.1-beta
+  
+infra:
+  provider: bicep
+  path: infra
+
+services:
+  gestor-vehiculos-api:
+    project: .
+    language: py
+    host: appservice
+    hooks:
+      predeploy:
+        windows:
+          - echo "Installing Python dependencies..."
+          - pip install -r requirements.txt
+        posix:
+          - echo "Installing Python dependencies..."
+          - pip install -r requirements.txt
+      postdeploy:
+        windows:
+          - echo "Running Django migrations..."
+          - python manage.py migrate --noinput
+          - echo "Collecting static files..."
+          - python manage.py collectstatic --noinput
+        posix:
+          - echo "Running Django migrations..."
+          - python manage.py migrate --noinput
+          - echo "Collecting static files..."
+          - python manage.py collectstatic --noinput

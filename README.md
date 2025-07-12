@@ -116,6 +116,17 @@ Una vez desplegado, la API estará disponible en: `https://tu-app.azurewebsites.
 
 ## 🐛 Solución de Problemas
 
+### Error: "Mixed Content" - HTTP/HTTPS
+Si ves este error:
+```
+The page was loaded over HTTPS, but requested an insecure XMLHttpRequest endpoint 'http://...'
+```
+
+**Solución rápida:**
+1. Ejecutar: `update.bat`
+2. Actualizar URLs del frontend a HTTPS
+3. Ver guía completa: [HTTPS_FIX_GUIDE.md](HTTPS_FIX_GUIDE.md)
+
 ### Error: "Application Error"
 1. Revisar logs: `azd logs`
 2. Verificar configuración de base de datos
@@ -134,6 +145,18 @@ azd auth login
 ### Error de cuota
 - Verificar cuota disponible en la región
 - Considerar cambiar región en `.env`
+
+## 🔧 Comandos de Mantenimiento
+
+```bash
+# Actualizar solo la aplicación (recomendado para cambios de código)
+update.bat
+
+# Ver logs en tiempo real
+azd logs --follow
+
+# Verificar estado de la aplicación
+https://tu-app.azurewebsites.net/health/
 
 ## 📚 Documentación Adicional
 

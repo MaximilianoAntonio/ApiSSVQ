@@ -43,17 +43,6 @@ class Vehiculo(models.Model):
         default=4,
         help_text="Número máximo de pasajeros (sin incluir conductor)"
     )
-    caracteristicas_adicionales = models.TextField(
-        blank=True, help_text="Características especiales: silla de ruedas, refrigerado, etc. (texto libre o JSON)"
-    )
-    ubicacion = models.CharField(max_length=255, blank=True, null=True)
-    conductor_preferente = models.ForeignKey(
-        'Conductor',
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='vehiculos_preferentes',
-        help_text="Conductor usual o preferente para este vehículo (opcional)"
-    )
     kilometraje = models.FloatField(default=0.0, help_text="Kilometraje total del vehículo en km.")
 
     def __str__(self):
@@ -66,14 +55,13 @@ class Conductor(models.Model):
         ('dia_libre', 'Día Libre'),
         ('no_disponible', 'No Disponible'),
     ]
+    run = models.CharField(max_length=12, unique=True, null=True, blank=True, help_text="Rol Único Nacional (ej: 12345678-9)")
     nombre = models.CharField(max_length=100, help_text="Nombre del conductor")
     apellido = models.CharField(max_length=100, help_text="Apellido del conductor")
     numero_licencia = models.CharField(max_length=50, unique=True, help_text="Número de licencia de conducir")
     fecha_vencimiento_licencia = models.DateField(help_text="Fecha de vencimiento de la licencia")
     telefono = models.CharField(max_length=20, blank=True, null=True, help_text="Número de teléfono (opcional)")
     email = models.EmailField(max_length=254, blank=True, null=True, help_text="Correo electrónico (opcional)")
-    activo = models.BooleanField(default=True, help_text="Indica si el conductor está habilitado en el sistema")
-    fecha_registro = models.DateTimeField(auto_now_add=True)
     
     # NUEVO CAMPO FOTO PARA CONDUCTOR
     foto = models.ImageField(upload_to='conductores_fotos/', null=True, blank=True, help_text="Foto del conductor")
@@ -87,11 +75,9 @@ class Conductor(models.Model):
         choices=ESTADO_DISPONIBILIDAD_CHOICES,
         default='dia_libre'
     )
-    ubicacion_actual_lat = models.FloatField(null=True, blank=True, help_text="Latitud actual del conductor")
-    ubicacion_actual_lon = models.FloatField(null=True, blank=True, help_text="Longitud actual del conductor")
 
     def __str__(self):
-        return f"{self.nombre} {self.apellido} ({self.numero_licencia})"
+        return f"{self.nombre} {self.apellido} ({self.run or self.numero_licencia})"
 
     class Meta:
         verbose_name = "Conductor"
@@ -122,10 +108,6 @@ class Asignacion(models.Model):
         default='Destino pendiente'
     )
     origen_descripcion = models.CharField(max_length=200, blank=True, help_text="Descripción del origen (opcional)")
-    fecha_hora_solicitud = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Cuándo se creó la solicitud"
-    )
     fecha_hora_requerida_inicio = models.DateTimeField(
         help_text="Cuándo se necesita el servicio",
         default=timezone.now
@@ -135,15 +117,11 @@ class Asignacion(models.Model):
         max_length=50, choices=Vehiculo.TIPO_VEHICULO_CHOICES, blank=True, null=True,
         help_text="Tipo de vehículo preferido/requerido (opcional)"
     )
-    req_caracteristicas_especiales = models.TextField(
-        blank=True, help_text="Requerimientos especiales para el vehículo (ej: silla de ruedas)"
-    )
     origen_lat = models.FloatField(null=True, blank=True)
     origen_lon = models.FloatField(null=True, blank=True)
     destino_lat = models.FloatField(null=True, blank=True)
     destino_lon = models.FloatField(null=True, blank=True)
     fecha_hora_fin_prevista = models.DateTimeField(null=True, blank=True)
-    fecha_hora_fin_real = models.DateTimeField(null=True, blank=True)
     estado = models.CharField(max_length=20, choices=ESTADO_ASIGNACION_CHOICES, default='pendiente_auto')
     observaciones = models.TextField(blank=True, null=True)
     solicitante_jerarquia = models.IntegerField(
@@ -154,12 +132,22 @@ class Asignacion(models.Model):
     solicitante_nombre = models.CharField(
         max_length=200,
         blank=True,
-        help_text="Nombre del funcionario responsable del traslado o contacto principal de la solicitud."
+        help_text="Nombre del solicitante de la asignación."
     )
     solicitante_telefono = models.CharField(
         max_length=50,
         blank=True,
-        help_text="Teléfono de contacto del solicitante o responsable."
+        help_text="Teléfono de contacto del solicitante."
+    )
+    responsable_nombre = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Nombre del responsable de la asignación."
+    )
+    responsable_telefono = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Teléfono de contacto del responsable de la asignación."
     )
     fecha_asignacion_funcionario = models.DateTimeField(
         null=True, blank=True,

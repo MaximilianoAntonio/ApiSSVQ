@@ -23,9 +23,7 @@ class VehiculoSerializer(serializers.ModelSerializer):
             'foto_url', # Campo para leer la URL
             'tipo_vehiculo',
             'tipo_vehiculo_display', 
-            'ubicacion',
-            'conductor_preferente',
-            'kilometraje',  # NUEVO: Añadido campo 'kilometraje'
+            'kilometraje',
         ]
         extra_kwargs = { # NUEVO
             'foto': {'write_only': True, 'required': False}
@@ -40,24 +38,31 @@ class ConductorSerializer(serializers.ModelSerializer):
         model = Conductor
         fields = [
             'id',
+            'run',
             'nombre',
             'apellido',
             'numero_licencia',
             'fecha_vencimiento_licencia',
             'telefono',
             'email',
-            'activo',
-            'fecha_registro',
             'foto', # NUEVO: para escribir/subir la foto
             'foto_url', # NUEVO
             'tipos_vehiculo_habilitados',
             'estado_disponibilidad',
             'estado_disponibilidad_display',
         ]
-        read_only_fields = ['fecha_registro']
         extra_kwargs = { # NUEVO
-            'foto': {'write_only': True, 'required': False}
+            'foto': {'write_only': True, 'required': False},
+            'run': {'required': False, 'allow_null': True, 'allow_blank': True}
         }
+    
+    def validate_run(self, value):
+        """
+        Convierte cadenas vacías a None para evitar problemas de unicidad
+        """
+        if value == '' or value is None:
+            return None
+        return value.strip() if value else None
 
 
 class AsignacionSerializer(serializers.ModelSerializer):
@@ -72,7 +77,7 @@ class AsignacionSerializer(serializers.ModelSerializer):
         required=False
     )
     conductor_id = serializers.PrimaryKeyRelatedField(
-        queryset=Conductor.objects.filter(activo=True),
+        queryset=Conductor.objects.filter(estado_disponibilidad='disponible'),
         source='conductor',
         write_only=True,
         allow_null=True,
@@ -94,16 +99,13 @@ class AsignacionSerializer(serializers.ModelSerializer):
             'conductor_id',
             'fecha_hora_requerida_inicio',
             'fecha_hora_fin_prevista',
-            'fecha_hora_fin_real',
             'estado',
             'estado_display',
             'destino_descripcion',
             'origen_descripcion',
-            'fecha_hora_solicitud',
             'req_pasajeros',
             'req_tipo_vehiculo_preferente',
             'req_tipo_vehiculo_preferente_display',
-            'req_caracteristicas_especiales',
             'origen_lat',
             'origen_lon',
             'destino_lat',
@@ -113,10 +115,10 @@ class AsignacionSerializer(serializers.ModelSerializer):
             'solicitante_jerarquia_display',
             'solicitante_nombre',
             'solicitante_telefono',
-            'fecha_asignacion_funcionario',
-            'distancia_recorrida_km',  # NUEVO: Añadido campo 'distancia_recorrida_km'
+            'responsable_nombre',
+            'responsable_telefono',
+            'distancia_recorrida_km',
         ]
-        read_only_fields = ['fecha_hora_solicitud']
 
     def validate(self, data):
         fecha_inicio = data.get('fecha_hora_requerida_inicio', getattr(self.instance, 'fecha_hora_requerida_inicio', None))

@@ -42,14 +42,54 @@ if RAILWAY_STATIC_URL:
 # Puerto para Railway
 PORT = os.environ.get('PORT', '8000')
 
+# Configuración CSRF para Railway
+if not DEBUG:
+    # Configuración para Railway (HTTPS)
+    CSRF_TRUSTED_ORIGINS = [
+        'https://*.railway.app',
+        'https://*.onrender.com',
+        'https://*.pythonanywhere.com',
+    ]
+    
+    # Configuración de seguridad para HTTPS
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = False  # Railway ya maneja HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
 # CORS
-# en lugar de CORS_ALLOWED_ORIGINS = [...], usa un regex que acepte cualquier IP en el puerto 8080
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https?://\d+\.\d+\.\d+\.\d+:8000$",
-]
-# opcionalmente desactiva allow-all si quieres ceñirte al regex
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Solo en desarrollo
+if DEBUG:
+    # En desarrollo, permitir todos los orígenes
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https?://\d+\.\d+\.\d+\.\d+:8000$",
+    ]
+else:
+    # En producción, ser más específico
+    CORS_ALLOWED_ORIGINS = [
+        "https://web-production-5e000.up.railway.app",  # Tu URL específica de Railway
+    ]
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://.*\.railway\.app$",
+        r"^https://.*\.onrender\.com$",
+        r"^https://.*\.pythonanywhere\.com$",
+    ]
+    CORS_ALLOW_ALL_ORIGINS = False
+
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Application definition
 
@@ -70,6 +110,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Para servir archivos estáticos
+    'gestor_vehiculos.middleware.RailwayMiddleware',  # Middleware personalizado para Railway
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -198,16 +239,33 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Configuración para WhiteNoise (servir archivos estáticos)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Configuración de seguridad para producción
-if not DEBUG:
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'DENY'
-    SECURE_HSTS_SECONDS = 86400
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuración de logging para Railway
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO' if not DEBUG else 'DEBUG',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

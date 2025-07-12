@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,75 +20,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k')
+SECRET_KEY = 'django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = ['*'] if DEBUG else [
-    'localhost',
-    '127.0.0.1',
-    '.railway.app',  # Para Railway
-    '.onrender.com',  # Para Render
-    '.pythonanywhere.com',  # Para PythonAnywhere
-]
-
-# Configuración específica para Railway
-RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
-if RAILWAY_STATIC_URL:
-    STATIC_URL = RAILWAY_STATIC_URL
-
-# Puerto para Railway
-PORT = os.environ.get('PORT', '8000')
-
-# Configuración CSRF para Railway
-if not DEBUG:
-    # Configuración para Railway (HTTPS)
-    CSRF_TRUSTED_ORIGINS = [
-        'https://*.railway.app',
-        'https://*.onrender.com',
-        'https://*.pythonanywhere.com',
-    ]
-    
-    # Configuración de seguridad para HTTPS
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = False  # Railway ya maneja HTTPS
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+ALLOWED_HOSTS = ['*']
 
 # CORS
-if DEBUG:
-    # En desarrollo, permitir todos los orígenes
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^https?://\d+\.\d+\.\d+\.\d+:8000$",
-    ]
-else:
-    # En producción, ser más específico
-    CORS_ALLOWED_ORIGINS = [
-        "https://web-production-5e000.up.railway.app",  # Tu URL específica de Railway
-    ]
-    CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^https://.*\.railway\.app$",
-        r"^https://.*\.onrender\.com$",
-        r"^https://.*\.pythonanywhere\.com$",
-    ]
-    CORS_ALLOW_ALL_ORIGINS = False
-
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+# en lugar de CORS_ALLOWED_ORIGINS = [...], usa un regex que acepte cualquier IP en el puerto 8080
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://\d+\.\d+\.\d+\.\d+:8000$",
 ]
+# opcionalmente desactiva allow-all si quieres ceñirte al regex
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -103,21 +48,20 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken', 
     'corsheaders',
-    'django_filters',  # Agregado para solucionar el template
     'asignaciones',
+    'django_filters',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Para servir archivos estáticos
-    'gestor_vehiculos.middleware.RailwayMiddleware',  # Middleware personalizado para Railway
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'gestor_vehiculos.urls'
@@ -125,11 +69,10 @@ ROOT_URLCONF = 'gestor_vehiculos.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Agregado directorio de templates
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -154,57 +97,32 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',  # Solo para desarrollo
-    ] if DEBUG else [
-        'rest_framework.renderers.JSONRenderer',  # Solo JSON en producción
-    ],
+    'PAGE_SIZE': 10 # O el tamaño de página que prefieras
 }
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Configuración de base de datos con variables de entorno
-if os.environ.get('DB_HOST'):
-    # Para SQL Server en Azure (tu configuración actual)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'mssql',
-            'NAME': os.environ.get('DB_NAME', 'ssvq'),
-            'USER': os.environ.get('DB_USER', 'ssvqdb@ssvq'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'ssvq1!flota'),
-            'HOST': os.environ.get('DB_HOST', 'ssvq.database.windows.net'),
-            'PORT': os.environ.get('DB_PORT', '1433'),
-            'OPTIONS': {
-                'driver': 'ODBC Driver 18 for SQL Server',
-            },
-        }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+# Configuración para PostgreSQL en la nube (ej. ElephantSQL)
+# Reemplaza los valores de abajo con las credenciales de tu base de datos.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ssvq_flota_db',
+        'USER': 'ssvq',
+        'PASSWORD': 'sMDi7Kbsdr9D6AQxnDkqlJztnQtFZPjt',
+        'HOST': 'dpg-d1jpeh7diees73cdqhag-a.oregon-postgres.render.com',
+        'PORT': '5432', # El puerto por defecto de PostgreSQL es 5432
     }
-elif os.environ.get('DATABASE_URL'):
-    # Para PostgreSQL en Railway/Render (si decides usarlo después)
-    try:
-        import dj_database_url
-        DATABASES = {
-            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-        }
-    except ImportError:
-        # Fallback si dj_database_url no está instalado
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
-else:
-    # Fallback a SQLite para desarrollo local y Railway (sin PostgreSQL)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -233,46 +151,16 @@ TIME_ZONE = 'America/Santiago'
 USE_I18N = True
 USE_TZ = True 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Configuración para WhiteNoise (servir archivos estáticos)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Configuración de logging para Railway
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO' if not DEBUG else 'DEBUG',
-            'propagate': False,
-        },
-        'django.security': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
-}

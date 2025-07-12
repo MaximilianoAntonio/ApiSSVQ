@@ -34,6 +34,14 @@ ALLOWED_HOSTS = ['*'] if DEBUG else [
     '.pythonanywhere.com',  # Para PythonAnywhere
 ]
 
+# Configuración específica para Railway
+RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
+if RAILWAY_STATIC_URL:
+    STATIC_URL = RAILWAY_STATIC_URL
+
+# Puerto para Railway
+PORT = os.environ.get('PORT', '8000')
+
 # CORS
 # en lugar de CORS_ALLOWED_ORIGINS = [...], usa un regex que acepte cualquier IP en el puerto 8080
 CORS_ALLOWED_ORIGIN_REGEXES = [

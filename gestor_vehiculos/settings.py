@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken', 
     'corsheaders',
+    'django_filters',  # Agregado para solucionar el template
     'asignaciones',
 ]
 
@@ -124,7 +125,7 @@ ROOT_URLCONF = 'gestor_vehiculos.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Agregado directorio de templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -153,29 +154,20 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10 # O el tamaño de página que prefieras
+    'PAGE_SIZE': 10,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # Solo para desarrollo
+    ] if DEBUG else [
+        'rest_framework.renderers.JSONRenderer',  # Solo JSON en producción
+    ],
 }
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Configuración de base de datos con variables de entorno
-if os.environ.get('DATABASE_URL'):
-    # Para PostgreSQL en Railway/Render
-    try:
-        import dj_database_url
-        DATABASES = {
-            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-        }
-    except ImportError:
-        # Fallback si dj_database_url no está instalado
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
-elif os.environ.get('DB_HOST'):
+if os.environ.get('DB_HOST'):
     # Para SQL Server en Azure (tu configuración actual)
     DATABASES = {
         'default': {
@@ -190,8 +182,23 @@ elif os.environ.get('DB_HOST'):
             },
         }
     }
+elif os.environ.get('DATABASE_URL'):
+    # Para PostgreSQL en Railway/Render (si decides usarlo después)
+    try:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        }
+    except ImportError:
+        # Fallback si dj_database_url no está instalado
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 else:
-    # Fallback a SQLite para desarrollo local
+    # Fallback a SQLite para desarrollo local y Railway (sin PostgreSQL)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

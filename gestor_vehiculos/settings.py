@@ -115,25 +115,16 @@ REST_FRAMEWORK = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+    'ENGINE': 'django.db.backends.sqlite3',
+    'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # Configuración para PostgreSQL en la nube (ej. ElephantSQL)
 # Reemplaza los valores de abajo con las credenciales de tu base de datos.
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ssvq_flota_db',
-        'USER': 'ssvq',
-        'PASSWORD': 'sMDi7Kbsdr9D6AQxnDkqlJztnQtFZPjt',
-        'HOST': 'dpg-d1jpeh7diees73cdqhag-a.oregon-postgres.render.com',
-        'PORT': '5432', # El puerto por defecto de PostgreSQL es 5432
-    }
-}
+
 
 
 # Password validation

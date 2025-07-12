@@ -9,14 +9,18 @@ from django.utils.deprecation import MiddlewareMixin
 
 class ForceHTTPSMiddleware(MiddlewareMixin):
     """
-    Middleware para forzar HTTPS en Azure App Service
+    Middleware para forzar HTTPS en Azure App Service y corregir URLs de paginación
     """
     
     def process_request(self, request):
-        # Verificar si estamos en Azure y la petición no es HTTPS
+        # Corregir el esquema para Azure App Service
         if not settings.DEBUG:
             # Azure App Service usa X-Forwarded-Proto header
-            if request.META.get('HTTP_X_FORWARDED_PROTO') == 'http':
+            proto = request.META.get('HTTP_X_FORWARDED_PROTO', '')
+            if proto == 'https':
+                request.is_secure = lambda: True
+                request.scheme = 'https'
+            elif proto == 'http':
                 # Redirigir a HTTPS
                 https_url = request.build_absolute_uri().replace('http://', 'https://')
                 return HttpResponsePermanentRedirect(https_url)
@@ -44,7 +48,7 @@ class ForceHTTPSMiddleware(MiddlewareMixin):
 
 class APISecurityMiddleware(MiddlewareMixin):
     """
-    Middleware específico para API que agrega headers de seguridad
+    Middleware específico para API que agrega headers de seguridad y corrige URLs
     """
     
     def process_response(self, request, response):
@@ -55,5 +59,16 @@ class APISecurityMiddleware(MiddlewareMixin):
                 response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
                 response['Pragma'] = 'no-cache'
                 response['Expires'] = '0'
+                
+                # Corregir URLs HTTP en el contenido JSON (para paginación)
+                if hasattr(response, 'content') and response.content:
+                    try:
+                        content = response.content.decode('utf-8')
+                        # Reemplazar URLs HTTP por HTTPS en el contenido
+                        content = content.replace('http://apissvq.azurewebsites.net', 'https://apissvq.azurewebsites.net')
+                        response.content = content.encode('utf-8')
+                        response['Content-Length'] = str(len(response.content))
+                    except:
+                        pass  # Si hay error, no modificar el contenido
         
         return response

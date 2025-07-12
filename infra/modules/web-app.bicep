@@ -127,6 +127,22 @@ resource appService 'Microsoft.Web/sites@2024-04-01' = {
           value: corsAllowedOrigins
         }
         {
+          name: 'FORCE_HTTPS'
+          value: 'true'
+        }
+        {
+          name: 'SECURE_SSL_REDIRECT'
+          value: 'true'
+        }
+        {
+          name: 'USE_X_FORWARDED_HOST'
+          value: 'true'
+        }
+        {
+          name: 'USE_X_FORWARDED_PORT'
+          value: 'true'
+        }
+        {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsightsConnectionString
         }

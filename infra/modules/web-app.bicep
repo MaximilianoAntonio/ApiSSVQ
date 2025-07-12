@@ -61,6 +61,10 @@ resource appService 'Microsoft.Web/sites@2024-04-01' = {
       scmMinTlsVersion: '1.2'
       http20Enabled: true
       healthCheckPath: '/health/'
+      cors: {
+        allowedOrigins: ['*']
+        supportCredentials: false
+      }
       appSettings: [
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
@@ -131,12 +135,6 @@ resource appService 'Microsoft.Web/sites@2024-04-01' = {
           value: keyVaultUri
         }
       ]
-      cors: {
-        allowedOrigins: [
-          '*'
-        ]
-        supportCredentials: false
-      }
     }
   }
 }

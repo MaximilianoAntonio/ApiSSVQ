@@ -29,6 +29,7 @@ from .services import asignar_vehiculos_automatico_lote
 
 from rest_framework.views import APIView
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.conf import settings
 
 class UserGroupView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -594,6 +595,42 @@ class DashboardStatsView(APIView):
             ).order_by('periodo')
         
         return list(tendencias)
+
+class HealthCheckView(APIView):
+    """
+    Health check endpoint con información de protocolo y configuración
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        # Información sobre el protocolo y configuración
+        health_data = {
+            'status': 'healthy',
+            'timestamp': timezone.now().isoformat(),
+            'debug': settings.DEBUG,
+            'https_only': getattr(settings, 'SECURE_SSL_REDIRECT', False),
+            'request_info': {
+                'is_secure': request.is_secure(),
+                'scheme': request.scheme,
+                'host': request.get_host(),
+                'full_url': request.build_absolute_uri(),
+                'headers': {
+                    'x_forwarded_proto': request.META.get('HTTP_X_FORWARDED_PROTO'),
+                    'x_forwarded_for': request.META.get('HTTP_X_FORWARDED_FOR'),
+                    'user_agent': request.META.get('HTTP_USER_AGENT'),
+                }
+            },
+            'cors_config': {
+                'allow_all_origins': getattr(settings, 'CORS_ALLOW_ALL_ORIGINS', False),
+                'allowed_origins': getattr(settings, 'CORS_ALLOWED_ORIGINS', []),
+            },
+            'database': {
+                'engine': settings.DATABASES['default']['ENGINE'],
+                'host': settings.DATABASES['default'].get('HOST', 'N/A'),
+            }
+        }
+        
+        return Response(health_data)
 
 
 

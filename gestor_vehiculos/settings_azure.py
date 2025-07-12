@@ -3,9 +3,6 @@ Azure production settings for gestor_vehiculos project.
 """
 
 import os
-import dj_database_url
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -104,25 +101,61 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
-# Database Configuration
+# Database Configuration - SQL Server
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    # Parse the database URL
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    }
+    # Parse SQL Server URL format: mssql://user:password@host:port/dbname
+    import re
+    match = re.match(r'mssql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', DATABASE_URL)
+    if match:
+        user, password, host, port, dbname = match.groups()
+        # Remove URL encoding from user (e.g., %40 -> @)
+        user = user.replace('%40', '@')
+        
+        DATABASES = {
+            'default': {
+                'ENGINE': 'mssql',
+                'NAME': dbname.split('?')[0],  # Remove query parameters from dbname
+                'USER': user,
+                'PASSWORD': password,
+                'HOST': host,
+                'PORT': port,
+                'OPTIONS': {
+                    'driver': 'ODBC Driver 18 for SQL Server',
+                    'extra_params': 'TrustServerCertificate=yes',
+                },
+                'CONN_MAX_AGE': 600,
+            }
+        }
+    else:
+        # Fallback if URL format is not recognized - use direct configuration for SQL Server
+        DATABASES = {
+            'default': {
+                'ENGINE': 'mssql',
+                'NAME': 'ssvq',
+                'USER': 'ssvqdb@ssvq',
+                'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'ssvq1!flota'),
+                'HOST': 'ssvq.database.windows.net',
+                'PORT': '1433',
+                'OPTIONS': {
+                    'driver': 'ODBC Driver 18 for SQL Server',
+                    'extra_params': 'TrustServerCertificate=yes',
+                },
+            }
+        }
 else:
-    # Fallback to individual environment variables
+    # Fallback to original SQL Server configuration
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'gestordb'),
-            'USER': os.environ.get('DB_USER', 'pgadmin'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+            'ENGINE': 'mssql',
+            'NAME': 'ssvq',
+            'USER': 'ssvqdb@ssvq',
+            'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'ssvq1!flota'),
+            'HOST': 'ssvq.database.windows.net',
+            'PORT': '1433',
             'OPTIONS': {
-                'sslmode': 'require',
+                'driver': 'ODBC Driver 18 for SQL Server',
+                'extra_params': 'TrustServerCertificate=yes',
             },
         }
     }
@@ -154,10 +187,20 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files configuration - Azure Blob Storage
-DEFAULT_FILE_STORAGE = 'asignaciones.storage.AzureBlobStorage'
-AZURE_STORAGE_ACCOUNT_NAME = os.environ.get('AZURE_STORAGE_ACCOUNT_NAME')
-AZURE_STORAGE_CONTAINER_NAME = os.environ.get('AZURE_STORAGE_CONTAINER_NAME', 'media')
+# Media files configuration - Try Azure Blob Storage, fallback to local
+try:
+    # Only use Azure storage if we have the required environment variables
+    AZURE_STORAGE_ACCOUNT_NAME = os.environ.get('AZURE_STORAGE_ACCOUNT_NAME')
+    AZURE_STORAGE_CONTAINER_NAME = os.environ.get('AZURE_STORAGE_CONTAINER_NAME', 'media')
+    
+    if AZURE_STORAGE_ACCOUNT_NAME:
+        DEFAULT_FILE_STORAGE = 'asignaciones.storage.AzureBlobStorage'
+    else:
+        # Fallback to local storage
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+except ImportError:
+    # If Azure libraries are not available, use local storage
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

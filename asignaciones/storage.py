@@ -6,12 +6,19 @@ import os
 from django.core.files.storage import Storage
 from django.core.files.base import ContentFile
 from django.conf import settings
-from azure.storage.blob import BlobServiceClient
-from azure.identity import DefaultAzureCredential
 from urllib.parse import urljoin
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Try to import Azure libraries, fallback gracefully if not available
+try:
+    from azure.storage.blob import BlobServiceClient
+    from azure.identity import DefaultAzureCredential
+    AZURE_AVAILABLE = True
+except ImportError:
+    logger.warning("Azure storage libraries not available, using local storage fallback")
+    AZURE_AVAILABLE = False
 
 
 class AzureBlobStorage(Storage):
@@ -22,16 +29,17 @@ class AzureBlobStorage(Storage):
     def __init__(self, option=None):
         self.account_name = getattr(settings, 'AZURE_STORAGE_ACCOUNT_NAME', None)
         self.container_name = getattr(settings, 'AZURE_STORAGE_CONTAINER_NAME', 'media')
+        self.client = None
         
-        if not self.account_name:
-            logger.warning("AZURE_STORAGE_ACCOUNT_NAME not configured, falling back to local storage")
+        if not AZURE_AVAILABLE or not self.account_name:
+            logger.warning("Azure storage not available or not configured, falling back to local storage")
             return
             
         # Use managed identity for authentication
         account_url = f"https://{self.account_name}.blob.core.windows.net"
-        credential = DefaultAzureCredential()
         
         try:
+            credential = DefaultAzureCredential()
             self.client = BlobServiceClient(account_url=account_url, credential=credential)
             # Test the connection
             self.client.get_account_information()

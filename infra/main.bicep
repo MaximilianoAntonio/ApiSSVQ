@@ -15,16 +15,10 @@ param location string
 @description('SKU for the App Service Plan')
 param appServicePlanSku string = 'B1'
 
-// Database parameters
-@description('The administrator username for the PostgreSQL server')
-param databaseAdministratorLogin string = 'pgadmin'
-
-@description('The administrator password for the PostgreSQL server')
+// Database parameters - Password for existing SQL Server connection
+@description('The administrator password for the existing SQL Server database')
 @secure()
 param databaseAdministratorPassword string
-
-@description('The name of the PostgreSQL database')
-param databaseName string = 'gestordb'
 
 // Application-specific parameters
 @description('Django Secret Key')
@@ -97,16 +91,13 @@ module storage 'modules/storage.bicep' = {
   }
 }
 
-module database 'modules/database.bicep' = {
-  name: 'database'
+// Database connection string to existing SQL Server
+module databaseSecret 'modules/key-vault-secret.bicep' = {
+  name: 'database-secret'
   params: {
-    serverName: 'postgres-${resourceToken}'
-    administratorLogin: databaseAdministratorLogin
-    administratorPassword: databaseAdministratorPassword
-    databaseName: databaseName
-    location: location
-    tags: tags
     keyVaultName: keyVault.outputs.keyVaultName
+    secretName: 'DATABASE-URL'
+    secretValue: 'mssql://ssvqdb%40ssvq:${databaseAdministratorPassword}@ssvq.database.windows.net:1433/ssvq?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes'
   }
 }
 
@@ -130,7 +121,7 @@ module webApp 'modules/web-app.bicep' = {
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storage.outputs.storageAccountName
     keyVaultName: keyVault.outputs.keyVaultName
-    databaseConnectionSecretName: database.outputs.connectionStringSecretName
+    databaseConnectionSecretName: databaseSecret.outputs.secretName
     userAssignedIdentityId: userIdentity.outputs.identityId
     djangoSecretKey: djangoSecretKey
     djangoDebug: djangoDebug

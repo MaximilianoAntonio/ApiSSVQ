@@ -113,10 +113,19 @@ REST_FRAMEWORK = {
 # Configuración de base de datos con variables de entorno
 if os.environ.get('DATABASE_URL'):
     # Para PostgreSQL en Railway/Render
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-    }
+    try:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        }
+    except ImportError:
+        # Fallback si dj_database_url no está instalado
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 elif os.environ.get('DB_HOST'):
     # Para SQL Server en Azure (tu configuración actual)
     DATABASES = {

@@ -12,7 +12,17 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
-import dj_database_url
+
+# Intentar cargar variables de entorno desde archivo .env
+try:
+    from decouple import config
+except ImportError:
+    # Si no está instalado python-decouple, usar os.environ directamente
+    def config(key, default=None, cast=str):
+        value = os.environ.get(key, default)
+        if cast == bool:
+            return value.lower() in ('true', '1', 'yes', 'on') if isinstance(value, str) else bool(value)
+        return cast(value) if value is not None else default
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,10 +32,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
@@ -128,34 +138,29 @@ REST_FRAMEWORK = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database configuration
-if os.environ.get('DATABASE_URL'):
-    # Railway PostgreSQL (production)
-    DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-    }
-elif os.environ.get('AZURE_SQL_HOST'):
-    # Azure SQL Server (alternative)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'mssql',
-            'NAME': os.environ.get('AZURE_SQL_NAME', 'ssvq'),
-            'USER': os.environ.get('AZURE_SQL_USER', 'ssvqdb@ssvq'),
-            'PASSWORD': os.environ.get('AZURE_SQL_PASSWORD', 'ssvq1!flota'),
-            'HOST': os.environ.get('AZURE_SQL_HOST', 'ssvq.database.windows.net'),
-            'PORT': os.environ.get('AZURE_SQL_PORT', '1433'),
-            'OPTIONS': {
-                'driver': 'ODBC Driver 18 for SQL Server',
-                'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
-            },
-        }
-    }
-else:
-    # Local development with SQLite
+# Configuración de base de datos
+if config('USE_LOCAL_DB', default=True, cast=bool):
+    # Base de datos local SQLite para desarrollo
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    # Base de datos Azure SQL Server para producción
+    DATABASES = {
+        'default': {
+            'ENGINE': 'mssql',
+            'NAME': config('AZURE_SQL_NAME', default='ssvq'),
+            'USER': config('AZURE_SQL_USER', default='ssvqdb@ssvq'),
+            'PASSWORD': config('AZURE_SQL_PASSWORD', default='ssvq1!flota'),
+            'HOST': config('AZURE_SQL_HOST', default='ssvq.database.windows.net'),
+            'PORT': config('AZURE_SQL_PORT', default='1433'),
+            'OPTIONS': {
+                'driver': 'ODBC Driver 18 for SQL Server',
+                'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
+            },
         }
     } 
 

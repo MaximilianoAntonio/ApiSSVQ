@@ -129,18 +129,13 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Database configuration
-# Use PostgreSQL for production (Railway) and SQL Server for development
-if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('DATABASE_URL'):
-    # Production - Use PostgreSQL on Railway
+if os.environ.get('DATABASE_URL'):
+    # Railway PostgreSQL (production)
     DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
-else:
-    # Development - Use SQL Server locally
+elif os.environ.get('AZURE_SQL_HOST'):
+    # Azure SQL Server (alternative)
     DATABASES = {
         'default': {
             'ENGINE': 'mssql',
@@ -151,8 +146,16 @@ else:
             'PORT': os.environ.get('AZURE_SQL_PORT', '1433'),
             'OPTIONS': {
                 'driver': 'ODBC Driver 18 for SQL Server',
-                'extra_params': 'TrustServerCertificate=yes;Encrypt=yes;Connection Timeout=30;',
+                'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
             },
+        }
+    }
+else:
+    # Local development with SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     } 
 

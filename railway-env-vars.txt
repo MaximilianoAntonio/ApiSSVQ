@@ -1,0 +1,13 @@
+# Variables de entorno para Railway
+# Copia estas variables en tu proyecto Railway (Settings > Variables)
+
+DEBUG=False
+RAILWAY_ENVIRONMENT=production
+AZURE_SQL_NAME=ssvq
+AZURE_SQL_USER=ssvqdb@ssvq
+AZURE_SQL_PASSWORD=ssvq1!flota
+AZURE_SQL_HOST=ssvq.database.windows.net
+AZURE_SQL_PORT=1433
+
+# Opcional: para identificar el entorno de Railway
+RAILWAY_DEPLOYMENT=true

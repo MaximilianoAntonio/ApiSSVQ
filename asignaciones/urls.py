@@ -1,6 +1,6 @@
 # asignaciones/urls.py
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from .routers import HTTPSRouter
 from .views import (
     VehiculoViewSet,
     ConductorViewSet,
@@ -23,7 +23,7 @@ from .views import (
 #     ...
 # ]
 
-router = DefaultRouter()
+router = HTTPSRouter()
 router.register(r'vehiculos', VehiculoViewSet)
 router.register(r'conductores', ConductorViewSet)
 router.register(r'asignaciones', AsignacionViewSet)

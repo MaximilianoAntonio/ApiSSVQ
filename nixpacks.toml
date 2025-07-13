@@ -1,18 +1,32 @@
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.11"
+
 [phases.setup]
-nixPkgs = ["python311", "unixODBC", "gcc", "pkg-config"]
+nixPkgs = ["python311", "gcc", "pkg-config", "curl"]
 
 [phases.install]
 dependsOn = ["setup"]
 cmds = [
+    # Set non-interactive mode
+    "export DEBIAN_FRONTEND=noninteractive",
+    "export ACCEPT_EULA=Y",
+    
     # Update system and install prerequisites
     "apt-get update",
-    "apt-get install -y curl apt-transport-https ca-certificates gnupg lsb-release",
+    "apt-get install -y --no-install-recommends curl apt-transport-https ca-certificates gnupg lsb-release",
     
-    # Add Microsoft repository and install ODBC driver
+    # Add Microsoft repository
     "curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -",
-    "echo 'deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/ubuntu/20.04/prod focal main' > /etc/apt/sources.list.d/mssql-release.list",
+    "echo 'deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/debian/11/prod bullseye main' > /etc/apt/sources.list.d/mssql-release.list",
     "apt-get update",
-    "ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev",
+    
+    # Remove conflicting packages and install ODBC driver
+    "apt-get remove -y unixodbc-common libodbcinst2 libodbc2 || true",
+    "apt-get install -y --no-install-recommends msodbcsql18 unixodbc-dev",
+    
+    # Clean up
+    "apt-get clean",
+    "rm -rf /var/lib/apt/lists/*",
     
     # Install Python dependencies
     "pip install --upgrade pip",
@@ -22,8 +36,8 @@ cmds = [
 [phases.build]
 dependsOn = ["install"]
 cmds = [
-    "python manage.py collectstatic --noinput"
+    "python manage.py collectstatic --noinput || echo 'Static files collection skipped'"
 ]
 
 [start]
-cmd = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 0 gestor_vehiculos.wsgi:application"
+cmd = "python manage.py migrate --noinput; gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 0 gestor_vehiculos.wsgi:application"

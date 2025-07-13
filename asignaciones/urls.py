@@ -7,7 +7,8 @@ from .views import (
     AsignacionViewSet,
     RegistroTurnoViewSet,
     CustomAuthToken,
-    UserGroupView
+    UserGroupView,
+    DashboardStatsView
 )
 
 # Note for the developer:
@@ -33,4 +34,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('get-token/', CustomAuthToken.as_view(), name='get-token'),
     path('user-groups/', UserGroupView.as_view(), name='user-groups'),
+    path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
 ]

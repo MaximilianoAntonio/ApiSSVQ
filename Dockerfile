@@ -39,5 +39,5 @@ RUN python manage.py collectstatic --noinput
 # Expose port
 EXPOSE 8000
 
-# Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "gestor_vehiculos.wsgi:application"]
+# Run gunicorn with proper headers for Railway
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--forwarded-allow-ips", "*", "--access-logfile", "-", "gestor_vehiculos.wsgi:application"]

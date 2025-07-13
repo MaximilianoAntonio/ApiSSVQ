@@ -9,7 +9,8 @@ from .views import (
     CustomAuthToken,
     UserGroupView,
     DashboardStatsView,        # NUEVA
-    DashboardRefreshCacheView  # NUEVA
+    DashboardRefreshCacheView, # NUEVA
+    DashboardStatsViewSafe     # NUEVA - VERSIÓN SEGURA
 )
 
 # Note for the developer:
@@ -36,5 +37,6 @@ urlpatterns = [
     path('get-token/', CustomAuthToken.as_view(), name='get-token'),
     path('user-groups/', UserGroupView.as_view(), name='user-groups'),
     path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
+    path('dashboard/stats/safe/', DashboardStatsViewSafe.as_view(), name='dashboard-stats-safe'),
     path('dashboard/refresh-cache/', DashboardRefreshCacheView.as_view(), name='dashboard-refresh-cache'),
 ]

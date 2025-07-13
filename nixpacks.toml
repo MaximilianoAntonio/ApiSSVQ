@@ -1,43 +1,27 @@
-[variables]
-NIXPACKS_PYTHON_VERSION = "3.11"
-
-[phases.setup]
-nixPkgs = ["python311", "gcc", "pkg-config", "curl"]
-
-[phases.install]
-dependsOn = ["setup"]
-cmds = [
-    # Set non-interactive mode
-    "export DEBIAN_FRONTEND=noninteractive",
-    "export ACCEPT_EULA=Y",
-    
-    # Update system and install prerequisites
-    "apt-get update",
-    "apt-get install -y --no-install-recommends curl apt-transport-https ca-certificates gnupg lsb-release",
-    
-    # Add Microsoft repository
-    "curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -",
-    "echo 'deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/debian/11/prod bullseye main' > /etc/apt/sources.list.d/mssql-release.list",
-    "apt-get update",
-    
-    # Remove conflicting packages and install ODBC driver
-    "apt-get remove -y unixodbc-common libodbcinst2 libodbc2 || true",
-    "apt-get install -y --no-install-recommends msodbcsql18 unixodbc-dev",
-    
-    # Clean up
-    "apt-get clean",
-    "rm -rf /var/lib/apt/lists/*",
-    
-    # Install Python dependencies
-    "pip install --upgrade pip",
-    "pip install -r requirements.txt"
-]
+[providers]
+python = "3.11"
 
 [phases.build]
-dependsOn = ["install"]
+dependsOn = ["setup"]
 cmds = [
-    "python manage.py collectstatic --noinput || echo 'Static files collection skipped'"
+    "python -m pip install --upgrade pip",
+    "pip install -r requirements.txt",
+    "python manage.py collectstatic --noinput --clear"
+]
+
+[phases.setup]
+nixPkgs = [
+    "python311",
+    "python311Packages.pip",
+    "unixODBC",
+    "msodbcsql18",
+    "curl",
+    "gnupg"
 ]
 
 [start]
-cmd = "python manage.py migrate --noinput; gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 0 gestor_vehiculos.wsgi:application"
+cmd = "gunicorn gestor_vehiculos.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
+
+[variables]
+PYTHONPATH = "/app"
+DJANGO_SETTINGS_MODULE = "gestor_vehiculos.settings"

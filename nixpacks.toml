@@ -1,0 +1,29 @@
+[phases.setup]
+nixPkgs = ["python311", "unixODBC", "gcc", "pkg-config"]
+
+[phases.install]
+dependsOn = ["setup"]
+cmds = [
+    # Update system and install prerequisites
+    "apt-get update",
+    "apt-get install -y curl apt-transport-https ca-certificates gnupg lsb-release",
+    
+    # Add Microsoft repository and install ODBC driver
+    "curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -",
+    "echo 'deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/ubuntu/20.04/prod focal main' > /etc/apt/sources.list.d/mssql-release.list",
+    "apt-get update",
+    "ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev",
+    
+    # Install Python dependencies
+    "pip install --upgrade pip",
+    "pip install -r requirements.txt"
+]
+
+[phases.build]
+dependsOn = ["install"]
+cmds = [
+    "python manage.py collectstatic --noinput"
+]
+
+[start]
+cmd = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 0 gestor_vehiculos.wsgi:application"

@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -137,8 +137,11 @@ DATABASES = {
         'PORT': os.environ.get('AZURE_SQL_PORT', '1433'),
         'OPTIONS': {
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes;Connection Timeout=30;',
+            'timeout': 20,
         },
+        'CONN_MAX_AGE': 600,
+        'CONN_HEALTH_CHECKS': True,
     }
 } 
 
@@ -189,3 +192,37 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging configuration for production debugging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'ERROR' if not DEBUG else 'DEBUG',
+            'propagate': False,
+        },
+    },
+}

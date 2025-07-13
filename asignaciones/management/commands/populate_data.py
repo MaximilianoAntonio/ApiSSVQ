@@ -132,27 +132,6 @@ class Command(BaseCommand):
 
             distancia_viaje = round(R * c, 2)
 
-            # Asignar vehículo y conductor basado en el estado
-            conductor_asignado = None
-            vehiculo_asignado = None
-            
-            if estado in ['programada', 'activa', 'completada']:
-                # Estados que requieren vehículo y conductor asignado
-                vehiculo_asignado = random.choice(vehiculos)
-                conductor_asignado = random.choice(conductores)
-                vehiculo_asignado.kilometraje += distancia_viaje if estado == 'completada' else 0
-                vehiculo_asignado.save()
-            elif estado in ['cancelada', 'fallo_auto']:
-                # Estados que pueden no tener asignaciones
-                if random.random() < 0.3:  # 30% de probabilidad de tener asignación previa
-                    vehiculo_asignado = random.choice(vehiculos)
-                    conductor_asignado = random.choice(conductores)
-            elif estado == 'pendiente_auto':
-                # Pendientes generalmente no tienen asignación aún
-                if random.random() < 0.1:  # 10% de probabilidad de tener asignación previa
-                    vehiculo_asignado = random.choice(vehiculos)
-                    conductor_asignado = random.choice(conductores)
-
             # Asignar estado de manera realista basado en la fecha
             estados_posibles = [
                 'pendiente_auto', 'programada', 'activa', 
@@ -186,6 +165,27 @@ class Command(BaseCommand):
                     ['activa', 'programada', 'pendiente_auto', 'completada'],
                     weights=[40, 35, 15, 10]
                 )[0]
+
+            # Asignar vehículo y conductor basado en el estado
+            conductor_asignado = None
+            vehiculo_asignado = None
+            
+            if estado in ['programada', 'activa', 'completada']:
+                # Estados que requieren vehículo y conductor asignado
+                vehiculo_asignado = random.choice(vehiculos)
+                conductor_asignado = random.choice(conductores)
+                vehiculo_asignado.kilometraje += distancia_viaje if estado == 'completada' else 0
+                vehiculo_asignado.save()
+            elif estado in ['cancelada', 'fallo_auto']:
+                # Estados que pueden no tener asignaciones
+                if random.random() < 0.3:  # 30% de probabilidad de tener asignación previa
+                    vehiculo_asignado = random.choice(vehiculos)
+                    conductor_asignado = random.choice(conductores)
+            elif estado == 'pendiente_auto':
+                # Pendientes generalmente no tienen asignación aún
+                if random.random() < 0.1:  # 10% de probabilidad de tener asignación previa
+                    vehiculo_asignado = random.choice(vehiculos)
+                    conductor_asignado = random.choice(conductores)
 
             # Generar observaciones basadas en el estado
             observaciones = ""

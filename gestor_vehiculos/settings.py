@@ -24,13 +24,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ['true', '1', 'yes']
 
 ALLOWED_HOSTS = ['*']
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-5e000.up.railway.app',
+    'https://frontflota-ofjx-qu4vu5qi3-maximilianoantonios-projects.vercel.app',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
@@ -38,12 +51,15 @@ CSRF_TRUSTED_ORIGINS = [
 # CORS
 CORS_ALLOWED_ORIGINS = [
     'https://web-production-5e000.up.railway.app',
+    'https://frontflota-ofjx-qu4vu5qi3-maximilianoantonios-projects.vercel.app',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
 # en lugar de CORS_ALLOWED_ORIGINS = [...], usa un regex que acepte cualquier IP en el puerto 8080
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://\d+\.\d+\.\d+\.\d+:8000$",
+    r"^https://.*\.vercel\.app$",
+    r"^https://.*\.up\.railway\.app$",
 ]
 # opcionalmente desactiva allow-all si quieres ceñirte al regex
 CORS_ALLOW_ALL_ORIGINS = True

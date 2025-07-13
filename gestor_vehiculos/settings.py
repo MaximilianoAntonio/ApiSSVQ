@@ -39,6 +39,11 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
+# Para Railway, permitir el host dinámico
+RAILWAY_STATIC_URL = config('RAILWAY_STATIC_URL', default='')
+if RAILWAY_STATIC_URL:
+    ALLOWED_HOSTS.append(RAILWAY_STATIC_URL)
+
 # Force HTTPS in production
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

@@ -24,14 +24,27 @@ SECRET_KEY=django-insecure-)i$w*5mx^2esaf$)+oarmvtbf@)-15q(#3#avi@zbw%bqewr5k
 
 3. **Despliega la aplicación**
    - Railway detectará automáticamente el `railway.toml`
-   - El deploy ejecutará las migraciones y creará el superusuario automáticamente
+   - El deploy ejecutará:
+     - Migraciones de base de datos
+     - Creación automática del superusuario
+     - Carga de datos sintéticos (vehículos, conductores, asignaciones)
+   - Todo estará listo para usar inmediatamente
 
 ## Credenciales de Acceso:
 
 Después del despliegue, podrás acceder con:
 - **Usuario:** admin
-- **Contraseña:** AdminSSVQ2025!
+- **Contraseña:** admin123
 - **URL Admin:** https://tu-app.railway.app/admin/
+
+## Datos Sintéticos Incluidos:
+
+Al desplegar, la aplicación cargará automáticamente:
+- ✅ **12 vehículos** de ejemplo con diferentes características
+- ✅ **12 conductores** con datos realistas 
+- ✅ **2000 asignaciones** sintéticas para pruebas
+- ✅ **1724 registros de turnos** de los últimos 90 días
+- ✅ **Usuario administrador** listo para usar
 
 ## Base de Datos:
 

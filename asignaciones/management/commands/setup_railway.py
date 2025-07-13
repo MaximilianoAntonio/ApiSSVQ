@@ -29,7 +29,7 @@ class Command(BaseCommand):
             )
             self.stdout.write('Access credentials:')
             self.stdout.write('Username: admin')
-            self.stdout.write('Password: AdminSSVQ2025!')
+            self.stdout.write('Password: admin123')
             
         except Exception as e:
             self.stdout.write(

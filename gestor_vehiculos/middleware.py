@@ -22,13 +22,10 @@ class ForceHTTPSMiddleware:
             'HTTP_X_FORWARDED_PROTO' in request.META and 
             request.META['HTTP_X_FORWARDED_PROTO'] == 'https'):
             request.is_secure = lambda: True
-            # Also set the scheme for URL building
-            request.scheme = 'https'
         
         # Force HTTPS in production environments
         if is_production:
             request.is_secure = lambda: True
-            request.scheme = 'https'
             # Set META for consistent behavior
             request.META['HTTP_X_FORWARDED_PROTO'] = 'https'
             
